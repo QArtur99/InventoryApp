@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,23 +41,29 @@ public class ProductCursorAdapter extends CursorAdapter {
     }
 
     @Override
-    public void bindView(View view, final Context context, final Cursor cursor) {
+    public void bindView(final View view, final Context context, final Cursor cursor) {
         ViewHolder holder = (ViewHolder) view.getTag();
 
         String productNameString = cursor.getString(cursor.getColumnIndex(Products.PRODUCT_NAME));
         String currentQuantityString = cursor.getString(cursor.getColumnIndex(Products.CURRENT_QUANTITY));
         String productPriceString = cursor.getString(cursor.getColumnIndex(Products.PRODUCT_PRICE));
+        long id = cursor.getLong(cursor.getColumnIndex(Products._ID));
+        int currentQuantityInt = cursor.getInt(cursor.getColumnIndex(Products.CURRENT_QUANTITY));
 
         holder.productName.setText(productNameString);
         holder.currentQuantity.setText(currentQuantityString);
         holder.price.setText(productPriceString);
 
+        final Bundle bundle = new Bundle();
+        bundle.putLong("id", id);
+        bundle.putInt("currentQuantityInt", currentQuantityInt);
+        holder.soldButton.setTag(bundle);
         holder.soldButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ButterKnife.bind(this, v);
-                int currentQuantityString = cursor.getInt(cursor.getColumnIndex(Products.CURRENT_QUANTITY));
-                long id = cursor.getLong(cursor.getColumnIndex(Products._ID));
+                Bundle bundleItem = (Bundle) v.getTag();
+                long id = bundleItem.getLong("id");
+                int currentQuantityString = bundleItem.getInt("currentQuantityInt");
                 Uri currentProductUri = ContentUris.withAppendedId(Products.CONTENT_URI, id);
 
                 int newCurrentQuantity = currentQuantityString - 1;

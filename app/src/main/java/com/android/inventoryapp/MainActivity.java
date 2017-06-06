@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @OnItemClick(R.id.list_view)
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         Uri currentProductUri = ContentUris.withAppendedId(Products.CONTENT_URI, id);
         intent.setData(currentProductUri);
