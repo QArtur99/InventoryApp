@@ -300,7 +300,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                     .create();
             dialog.show();
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.setCanceledOnTouchOutside(false);
             ButterKnife.bind(this, dialog);
         }
 
