@@ -125,7 +125,7 @@ public class DatabaseProvider extends ContentProvider {
         if (values.containsKey(Products.PRODUCT_NAME)) {
             String name = values.getAsString(Products.PRODUCT_NAME);
             if (name == null) {
-                throw new IllegalArgumentException("Pet requires a name");
+                throw new IllegalArgumentException("Product requires a name");
             }
         }
 

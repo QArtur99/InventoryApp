@@ -8,7 +8,7 @@ import android.provider.BaseColumns;
  * Created by ART_F on 2017-06-05.
  */
 
-public class DatabaseContract {
+public final class DatabaseContract {
 
     public static final String CONTENT_AUTHORITY = "com.android.inventoryapp";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
@@ -32,12 +32,14 @@ public class DatabaseContract {
         public static final String PRODUCT_NAME = "productName";
         public static final String CURRENT_QUANTITY = "currentQuantity";
         public static final String PRODUCT_PRICE = "productPrice";
+        public static final String PRODUCT_IMAGE = "productImage";
 
         public static final String[] projection = {
                 _ID,
                 PRODUCT_NAME,
                 CURRENT_QUANTITY,
-                PRODUCT_PRICE
+                PRODUCT_PRICE,
+                PRODUCT_IMAGE
         };
 
         static final String SQL_CREATE_HABITS =
@@ -45,10 +47,15 @@ public class DatabaseContract {
                         + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                         + PRODUCT_NAME + " TEXT,"
                         + CURRENT_QUANTITY + " TEXT,"
-                        + PRODUCT_PRICE + " TEXT"
+                        + PRODUCT_PRICE + " TEXT,"
+                        + PRODUCT_IMAGE + " BLOB"
                         + ");";
 
         static final String SQL_DELETE_HABITS =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
+
+        static final String PRODUCT_IMAGE_COLUMN = "ALTER TABLE "
+                + TABLE_NAME + " ADD COLUMN " + PRODUCT_IMAGE + " BLOB;";
+
     }
 }

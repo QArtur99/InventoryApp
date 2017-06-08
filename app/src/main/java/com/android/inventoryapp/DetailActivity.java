@@ -8,22 +8,27 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.android.inventoryapp.database.DatabaseContract;
 import com.android.inventoryapp.database.DatabaseContract.Products;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 import butterknife.BindView;
@@ -34,7 +39,11 @@ import butterknife.OnTouch;
 
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+    static final int REQUEST_CAMERA = 1;
+    static final int REQUEST_GALLERY = 2;
     private static final int EXISTING_PET_LOADER = 0;
+    @BindView(R.id.loadImage) Button loadImage;
+    @BindView(R.id.productPicture) ImageView productPicture;
     @BindView(R.id.productName) EditText productNameEdit;
     @BindView(R.id.currentQuantity) EditText currentQuantityEdit;
     @BindView(R.id.productPrice) EditText productPriceEdit;
@@ -43,9 +52,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     @BindView(R.id.saveNewProduct) Button saveNewProduct;
     @BindView(R.id.editView) LinearLayout editView;
     @BindViews({R.id.productNameSave, R.id.currentQuantitySave, R.id.productPriceSave}) List<Button> buttonList;
+    AlertDialog dialog;
     private Uri currentProductUri;
     private boolean productHasChanged = false;
     private int currentQuantity;
+    private byte[] bitmapProductPicture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +95,53 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         startActivity(intent);
     }
 
+    @OnClick(R.id.loadImage)
+    public void loadImage() {
+        new DialogPicture(this);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Bitmap imageBitmap = null;
+
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
+                case REQUEST_CAMERA:
+                    Bundle extras = data.getExtras();
+                    imageBitmap = (Bitmap) extras.get("data");
+                    break;
+                case REQUEST_GALLERY:
+                    Uri imageUri = data.getData();
+                    try {
+                        imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+            productPicture.setImageBitmap(imageBitmap);
+
+        } else {
+            productPicture.setImageResource(R.drawable.nopic);
+        }
+
+        if (imageBitmap != null) {
+            ByteArrayOutputStream blob = new ByteArrayOutputStream();
+            imageBitmap.compress(Bitmap.CompressFormat.PNG, 0, blob);
+            bitmapProductPicture = blob.toByteArray();
+
+            if ((currentProductUri != null)) {
+                ContentValues values = new ContentValues();
+                values.put(Products.PRODUCT_IMAGE, bitmapProductPicture);
+                int rowsAffected = getContentResolver().update(currentProductUri, values, null, null);
+            }
+        }
+
+        if (dialog != null) {
+            dialog.dismiss();
+        }
+    }
+
     @OnClick({R.id.saveNewProduct, R.id.productNameSave, R.id.currentQuantitySave, R.id.productPriceSave, R.id.soldQuantitySave, R.id.receivedQuantitySave})
     public void saveProduct(View view) {
 
@@ -103,6 +161,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             values.put(Products.PRODUCT_NAME, productNameString);
             values.put(Products.CURRENT_QUANTITY, currentQuantityString);
             values.put(Products.PRODUCT_PRICE, productPriceString);
+            values.put(Products.PRODUCT_IMAGE, bitmapProductPicture);
 
             Uri newUri = getContentResolver().insert(Products.CONTENT_URI, values);
 
@@ -149,7 +208,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
-
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return new CursorLoader(this, currentProductUri, DatabaseContract.Products.projection, null, null, null);
@@ -165,10 +223,19 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             String productName = cursor.getString(cursor.getColumnIndex(Products.PRODUCT_NAME));
             currentQuantity = cursor.getInt(cursor.getColumnIndex(Products.CURRENT_QUANTITY));
             double productPrice = cursor.getDouble(cursor.getColumnIndex(Products.PRODUCT_PRICE));
+            bitmapProductPicture = cursor.getBlob(cursor.getColumnIndex(Products.PRODUCT_IMAGE));
 
             productNameEdit.setText(productName);
             currentQuantityEdit.setText(String.valueOf(currentQuantity));
             productPriceEdit.setText(String.valueOf(productPrice));
+
+            if (bitmapProductPicture != null) {
+                Bitmap imageBitmap = BitmapFactory.decodeByteArray(bitmapProductPicture, 0, bitmapProductPicture.length);
+                productPicture.setImageBitmap(imageBitmap);
+            } else {
+                productPicture.setImageResource(R.drawable.nopic);
+            }
+
         }
 
     }
@@ -178,6 +245,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         productNameEdit.setText("");
         currentQuantityEdit.setText("");
         productPriceEdit.setText("");
+        productPicture.setImageResource(R.drawable.nopic);
     }
 
     @OnClick(R.id.delete)
@@ -185,7 +253,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         new DialogConfirmation(this);
     }
 
-    private void deletePet() {
+    private void deleteProduct() {
         if (currentProductUri != null) {
             int rowsDeleted = getContentResolver().delete(currentProductUri, null, null);
             if (rowsDeleted == 0) {
@@ -199,7 +267,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     public class DialogConfirmation {
-        AlertDialog dialog;
+
 
         DialogConfirmation(Context context) {
             dialog = new AlertDialog.Builder(context)
@@ -220,8 +288,36 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         @OnClick(R.id.deleteDialog)
         public void deleteDialogOnClick() {
-            deletePet();
+            deleteProduct();
         }
+    }
+
+    public class DialogPicture {
+
+        DialogPicture(Context context) {
+            dialog = new AlertDialog.Builder(context)
+                    .setView(R.layout.dialog_picture)
+                    .create();
+            dialog.show();
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.setCanceledOnTouchOutside(false);
+            ButterKnife.bind(this, dialog);
+        }
+
+        @OnClick(R.id.loadFromGallery)
+        public void loadPicture() {
+            Intent takePictureIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(takePictureIntent, REQUEST_GALLERY);
+        }
+
+        @OnClick(R.id.takePicture)
+        public void takePicture() {
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+            }
+        }
+
     }
 
 

@@ -38,6 +38,10 @@
     <string name="delete">Delete</string>
     <string name="save_new_product">Save new product</string>
     <string name="default_value">1</string>
+    <string name="detail_layout_load">Load</string>
+    <string name="detail_layout_picture_is_not_available">Picture is not available</string>
+    <string name="load_picture_from_gallery">Load picture from gallery</string>
+    <string name="take_a_picture">Take a picture</string>
 
 
 </resources>
