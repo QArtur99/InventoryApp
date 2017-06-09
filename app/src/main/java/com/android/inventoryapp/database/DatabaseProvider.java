@@ -88,6 +88,11 @@ public class DatabaseProvider extends ContentProvider {
             throw new IllegalArgumentException("Product requires valid price");
         }
 
+        byte[] bitmapProductPicture = values.getAsByteArray(Products.PRODUCT_IMAGE);
+        if (bitmapProductPicture == null) {
+            throw new IllegalArgumentException("Product requires valid price");
+        }
+
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         long id = database.insert(Products.TABLE_NAME, null, values);
 
@@ -140,6 +145,13 @@ public class DatabaseProvider extends ContentProvider {
         if (values.containsKey(Products.PRODUCT_PRICE)) {
             Double price = values.getAsDouble(Products.PRODUCT_PRICE);
             if (price == null || 0.00 > price) {
+                throw new IllegalArgumentException("Product requires valid price");
+            }
+        }
+
+        if (values.containsKey(Products.PRODUCT_IMAGE)) {
+            byte[] bitmapProductPicture = values.getAsByteArray(Products.PRODUCT_IMAGE);
+            if (bitmapProductPicture == null) {
                 throw new IllegalArgumentException("Product requires valid price");
             }
         }

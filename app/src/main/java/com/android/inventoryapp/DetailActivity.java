@@ -57,6 +57,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private boolean productHasChanged = false;
     private int currentQuantity;
     private byte[] bitmapProductPicture;
+    private String productName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,9 +90,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     @OnClick(R.id.orderMore)
     public void orderMore() {
-        String email = "mailto:ruacalendarpro@gmail.com";
-        Uri addressUri = Uri.parse(email);
-        Intent intent = new Intent(Intent.ACTION_SENDTO, addressUri);
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setType("text/plain");
+        intent.setData(Uri.parse("mailto:"));
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"ruacalendarpro@gmail.com"});
+        intent.putExtra(Intent.EXTRA_SUBJECT, "We would like to order more " + productName);
         startActivity(intent);
     }
 
@@ -133,7 +136,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             if ((currentProductUri != null)) {
                 ContentValues values = new ContentValues();
                 values.put(Products.PRODUCT_IMAGE, bitmapProductPicture);
-                int rowsAffected = getContentResolver().update(currentProductUri, values, null, null);
+                updateInfo(values);
             }
         }
 
@@ -149,7 +152,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         String currentQuantityString = currentQuantityEdit.getText().toString().trim();
         String productPriceString = productPriceEdit.getText().toString().trim();
 
-        if (TextUtils.isEmpty(productNameString) || TextUtils.isEmpty(currentQuantityString) || TextUtils.isEmpty(productPriceString)) {
+        if (TextUtils.isEmpty(productNameString) || TextUtils.isEmpty(currentQuantityString) ||
+                TextUtils.isEmpty(productPriceString) || bitmapProductPicture == null) {
             Toast.makeText(this, getString(R.string.detail_new_product_requirement), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -198,13 +202,16 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                     values.put(Products.CURRENT_QUANTITY, String.valueOf(newCurrentQuantity));
                     break;
             }
-            int rowsAffected = getContentResolver().update(currentProductUri, values, null, null);
+            updateInfo(values);
+        }
+    }
 
-            if (rowsAffected == 0) {
-                Toast.makeText(this, getString(R.string.editor_update_product_failed), Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, getString(R.string.editor_update_product_successful), Toast.LENGTH_SHORT).show();
-            }
+    private void updateInfo(ContentValues values) {
+        int rowsAffected = getContentResolver().update(currentProductUri, values, null, null);
+        if (rowsAffected == 0) {
+            Toast.makeText(this, getString(R.string.editor_update_product_failed), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, getString(R.string.editor_update_product_successful), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -220,21 +227,18 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
 
         if (cursor.moveToFirst()) {
-            String productName = cursor.getString(cursor.getColumnIndex(Products.PRODUCT_NAME));
+            productName = cursor.getString(cursor.getColumnIndex(Products.PRODUCT_NAME));
             currentQuantity = cursor.getInt(cursor.getColumnIndex(Products.CURRENT_QUANTITY));
             double productPrice = cursor.getDouble(cursor.getColumnIndex(Products.PRODUCT_PRICE));
             bitmapProductPicture = cursor.getBlob(cursor.getColumnIndex(Products.PRODUCT_IMAGE));
 
+            Bitmap imageBitmap = BitmapFactory.decodeByteArray(bitmapProductPicture, 0, bitmapProductPicture.length);
+
             productNameEdit.setText(productName);
             currentQuantityEdit.setText(String.valueOf(currentQuantity));
             productPriceEdit.setText(String.valueOf(productPrice));
+            productPicture.setImageBitmap(imageBitmap);
 
-            if (bitmapProductPicture != null) {
-                Bitmap imageBitmap = BitmapFactory.decodeByteArray(bitmapProductPicture, 0, bitmapProductPicture.length);
-                productPicture.setImageBitmap(imageBitmap);
-            } else {
-                productPicture.setImageResource(R.drawable.nopic);
-            }
 
         }
 
