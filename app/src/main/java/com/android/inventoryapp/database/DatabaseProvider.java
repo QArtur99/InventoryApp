@@ -90,7 +90,7 @@ public class DatabaseProvider extends ContentProvider {
 
         byte[] bitmapProductPicture = values.getAsByteArray(Products.PRODUCT_IMAGE);
         if (bitmapProductPicture == null) {
-            throw new IllegalArgumentException("Product requires valid price");
+            throw new IllegalArgumentException("Product requires image");
         }
 
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
@@ -152,7 +152,7 @@ public class DatabaseProvider extends ContentProvider {
         if (values.containsKey(Products.PRODUCT_IMAGE)) {
             byte[] bitmapProductPicture = values.getAsByteArray(Products.PRODUCT_IMAGE);
             if (bitmapProductPicture == null) {
-                throw new IllegalArgumentException("Product requires valid price");
+                throw new IllegalArgumentException("Product requires image");
             }
         }
 
