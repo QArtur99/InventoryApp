@@ -34,7 +34,14 @@ public final class DatabaseContract {
         public static final String PRODUCT_PRICE = "productPrice";
         public static final String PRODUCT_IMAGE = "productImage";
 
-        public static final String[] projection = {
+        public static final String[] projectionList = {
+                _ID,
+                PRODUCT_NAME,
+                CURRENT_QUANTITY,
+                PRODUCT_PRICE
+        };
+
+        public static final String[] projectionDetail = {
                 _ID,
                 PRODUCT_NAME,
                 CURRENT_QUANTITY,

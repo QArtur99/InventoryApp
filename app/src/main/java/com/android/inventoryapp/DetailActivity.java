@@ -25,7 +25,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.android.inventoryapp.database.DatabaseContract;
 import com.android.inventoryapp.database.DatabaseContract.Products;
 
 import java.io.ByteArrayOutputStream;
@@ -41,7 +40,7 @@ import butterknife.OnTouch;
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     static final int REQUEST_CAMERA = 1;
     static final int REQUEST_GALLERY = 2;
-    private static final int EXISTING_PET_LOADER = 0;
+    private static final int EXISTING_PRODUCT_LOADER = 0;
     @BindView(R.id.loadImage) Button loadImage;
     @BindView(R.id.productPicture) ImageView productPicture;
     @BindView(R.id.productName) EditText productNameEdit;
@@ -77,7 +76,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         } else {
             saveNewProduct.setVisibility(View.GONE);
             setTitle(getString(R.string.detail_activity_title_edit_product));
-            getLoaderManager().initLoader(EXISTING_PET_LOADER, null, this);
+            getLoaderManager().initLoader(EXISTING_PRODUCT_LOADER, null, this);
         }
 
     }
@@ -129,8 +128,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
 
         if (imageBitmap != null) {
+
             ByteArrayOutputStream blob = new ByteArrayOutputStream();
-            imageBitmap.compress(Bitmap.CompressFormat.PNG, 0, blob);
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, blob);
             bitmapProductPicture = blob.toByteArray();
 
             if ((currentProductUri != null)) {
@@ -217,7 +217,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return new CursorLoader(this, currentProductUri, DatabaseContract.Products.projection, null, null, null);
+        return new CursorLoader(this, currentProductUri, Products.projectionDetail, null, null, null);
     }
 
     @Override

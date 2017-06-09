@@ -35,7 +35,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private ProductCursorAdapter productCursorAdapter;
     private static final int INITIAL_REQUEST = 1337;
     private static final String[] INITIAL_PERMS = {
-            Manifest.permission.CAMERA,
+            Manifest.permission.CAMERA
+
     };
 
     @Override
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private void checkPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!checkIfAlreadyhavePermission()) {
+            if (!checkIfAlreadyHavePermission()) {
                 requestForSpecificPermission();
             } else {
                 startApp();
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         getLoaderManager().initLoader(PRODUCT_LOADER, null, this).forceLoad();
     }
 
-    private boolean checkIfAlreadyhavePermission() {
+    private boolean checkIfAlreadyHavePermission() {
         int result = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         return result == PackageManager.PERMISSION_GRANTED;
     }
@@ -111,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return new CursorLoader(this, Products.CONTENT_URI, Products.projection, null, null, null);
+        return new CursorLoader(this, Products.CONTENT_URI, Products.projectionList, null, null, null);
     }
 
     @Override
