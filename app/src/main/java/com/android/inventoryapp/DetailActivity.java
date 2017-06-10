@@ -38,9 +38,9 @@ import butterknife.OnTouch;
 
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
-    static final int REQUEST_CAMERA = 1;
-    static final int REQUEST_GALLERY = 2;
     private static final int EXISTING_PRODUCT_LOADER = 0;
+    private static final int REQUEST_CAMERA = 1;
+    private static final int REQUEST_GALLERY = 2;
     @BindView(R.id.loadImage) Button loadImage;
     @BindView(R.id.productPicture) ImageView productPicture;
     @BindView(R.id.productName) EditText productNameEdit;
@@ -51,7 +51,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     @BindView(R.id.saveNewProduct) Button saveNewProduct;
     @BindView(R.id.editView) LinearLayout editView;
     @BindViews({R.id.productNameSave, R.id.currentQuantitySave, R.id.productPriceSave}) List<Button> buttonList;
-    AlertDialog dialog;
+    private AlertDialog dialog;
     private Uri currentProductUri;
     private boolean productHasChanged = false;
     private int currentQuantity;

@@ -30,14 +30,14 @@ import butterknife.OnItemClick;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final int PRODUCT_LOADER = 0;
-    @BindView(R.id.list_view) ListView productListView;
-    @BindView(R.id.empty_view) View emptyView;
-    private ProductCursorAdapter productCursorAdapter;
     private static final int INITIAL_REQUEST = 1337;
     private static final String[] INITIAL_PERMS = {
             Manifest.permission.CAMERA
-
     };
+
+    @BindView(R.id.list_view) ListView productListView;
+    @BindView(R.id.empty_view) View emptyView;
+    private ProductCursorAdapter productCursorAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
