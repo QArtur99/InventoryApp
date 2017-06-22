@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.util.Log;
 
@@ -88,8 +89,8 @@ public class DatabaseProvider extends ContentProvider {
             throw new IllegalArgumentException("Product requires valid price");
         }
 
-        byte[] bitmapProductPicture = values.getAsByteArray(Products.PRODUCT_IMAGE);
-        if (bitmapProductPicture == null) {
+        String productPictureUri = values.getAsString(Products.PRODUCT_IMAGE);
+        if (productPictureUri == null) {
             throw new IllegalArgumentException("Product requires image");
         }
 
@@ -150,14 +151,16 @@ public class DatabaseProvider extends ContentProvider {
         }
 
         if (values.containsKey(Products.PRODUCT_IMAGE)) {
-            byte[] bitmapProductPicture = values.getAsByteArray(Products.PRODUCT_IMAGE);
-            if (bitmapProductPicture == null) {
+            String productPictureUri = values.getAsString(Products.PRODUCT_IMAGE);
+            if (productPictureUri == null) {
                 throw new IllegalArgumentException("Product requires image");
             }
         }
 
+        SQLiteOpenHelper databaseHelper = new DatabaseHelper(getContext());
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         int rowsUpdated = database.update(Products.TABLE_NAME, values, selection, selectionArgs);
+        databaseHelper.close();
 
         if (rowsUpdated != 0) {
             getContext().getContentResolver().notifyChange(uri, null);

@@ -23,6 +23,9 @@ import android.widget.Toast;
 
 import com.android.inventoryapp.database.DatabaseContract.Products;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -32,7 +35,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private static final int PRODUCT_LOADER = 0;
     private static final int INITIAL_REQUEST = 1337;
     private static final String[] INITIAL_PERMS = {
-            Manifest.permission.CAMERA
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
     @BindView(R.id.list_view) ListView productListView;
@@ -42,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        MainActivity.this.deleteDatabase("InventoryApp.db");
+//        MainActivity.this.deleteDatabase("InventoryApp.db");
         checkPermissions();
     }
 
@@ -68,8 +73,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     private boolean checkIfAlreadyHavePermission() {
-        int result = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        return result == PackageManager.PERMISSION_GRANTED;
+        List<Integer> listOfPerms = new ArrayList<>();
+        boolean result = false;
+        listOfPerms.add(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA));
+        listOfPerms.add(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE));
+        listOfPerms.add(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE));
+        for(int i : listOfPerms){
+            if(i == PackageManager.PERMISSION_GRANTED){
+                result = true;
+            }else{
+                return false;
+            }
+        }
+        return result;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)

@@ -55,14 +55,14 @@ public final class DatabaseContract {
                         + PRODUCT_NAME + " TEXT,"
                         + CURRENT_QUANTITY + " TEXT,"
                         + PRODUCT_PRICE + " TEXT,"
-                        + PRODUCT_IMAGE + " BLOB"
+                        + PRODUCT_IMAGE + " TEXT"
                         + ");";
 
         static final String SQL_DELETE_HABITS =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;
 
         static final String PRODUCT_IMAGE_COLUMN = "ALTER TABLE "
-                + TABLE_NAME + " ADD COLUMN " + PRODUCT_IMAGE + " BLOB;";
+                + TABLE_NAME + " ADD COLUMN " + PRODUCT_IMAGE + " TEXT;";
 
     }
 }

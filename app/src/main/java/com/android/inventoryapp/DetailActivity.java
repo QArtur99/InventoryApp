@@ -9,11 +9,11 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -27,7 +27,11 @@ import android.widget.Toast;
 
 import com.android.inventoryapp.database.DatabaseContract.Products;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -51,12 +55,14 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     @BindView(R.id.saveNewProduct) Button saveNewProduct;
     @BindView(R.id.editView) LinearLayout editView;
     @BindViews({R.id.productNameSave, R.id.currentQuantitySave, R.id.productPriceSave}) List<Button> buttonList;
+    String mCurrentPhotoPath;
     private AlertDialog dialog;
     private Uri currentProductUri;
     private boolean productHasChanged = false;
     private int currentQuantity;
     private byte[] bitmapProductPicture;
     private String productName;
+    private Uri imageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,15 +111,15 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Bitmap imageBitmap = null;
-
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case REQUEST_CAMERA:
                     Bundle extras = data.getExtras();
                     imageBitmap = (Bitmap) extras.get("data");
+                    imageUri = saveTakenPic(imageBitmap);
                     break;
                 case REQUEST_GALLERY:
-                    Uri imageUri = data.getData();
+                    imageUri = data.getData();
                     try {
                         imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
                     } catch (Exception e) {
@@ -127,22 +133,39 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             productPicture.setImageResource(R.drawable.nopic);
         }
 
-        if (imageBitmap != null) {
-
-            ByteArrayOutputStream blob = new ByteArrayOutputStream();
-            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, blob);
-            bitmapProductPicture = blob.toByteArray();
-
-            if ((currentProductUri != null)) {
-                ContentValues values = new ContentValues();
-                values.put(Products.PRODUCT_IMAGE, bitmapProductPicture);
-                updateInfo(values);
-            }
+        if ((currentProductUri != null && imageUri != null)) {
+            ContentValues values = new ContentValues();
+            values.put(Products.PRODUCT_IMAGE, imageUri.toString());
+            updateInfo(values);
         }
+
 
         if (dialog != null) {
             dialog.dismiss();
         }
+    }
+
+    private Uri saveTakenPic(Bitmap bitmap) {
+        File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/inventoryApp");
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File image = new File(directory, imageFileName + "SGM.jpg");
+
+        try {
+            image.createNewFile();
+            FileOutputStream out = new FileOutputStream(image);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Uri.fromFile(image);
+
     }
 
     @OnClick({R.id.saveNewProduct, R.id.productNameSave, R.id.currentQuantitySave, R.id.productPriceSave, R.id.soldQuantitySave, R.id.receivedQuantitySave})
@@ -152,8 +175,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         String currentQuantityString = currentQuantityEdit.getText().toString().trim();
         String productPriceString = productPriceEdit.getText().toString().trim();
 
-        if (TextUtils.isEmpty(productNameString) || TextUtils.isEmpty(currentQuantityString) ||
-                TextUtils.isEmpty(productPriceString) || bitmapProductPicture == null) {
+        if (TextUtils.isEmpty(productNameString)
+                || TextUtils.isEmpty(currentQuantityString)
+                || TextUtils.isEmpty(productPriceString)
+                || TextUtils.isEmpty(imageUri.toString())) {
             Toast.makeText(this, getString(R.string.detail_new_product_requirement), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -165,7 +190,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             values.put(Products.PRODUCT_NAME, productNameString);
             values.put(Products.CURRENT_QUANTITY, currentQuantityString);
             values.put(Products.PRODUCT_PRICE, productPriceString);
-            values.put(Products.PRODUCT_IMAGE, bitmapProductPicture);
+            values.put(Products.PRODUCT_IMAGE, imageUri.toString());
 
             Uri newUri = getContentResolver().insert(Products.CONTENT_URI, values);
 
@@ -230,14 +255,24 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             productName = cursor.getString(cursor.getColumnIndex(Products.PRODUCT_NAME));
             currentQuantity = cursor.getInt(cursor.getColumnIndex(Products.CURRENT_QUANTITY));
             double productPrice = cursor.getDouble(cursor.getColumnIndex(Products.PRODUCT_PRICE));
-            bitmapProductPicture = cursor.getBlob(cursor.getColumnIndex(Products.PRODUCT_IMAGE));
+            String imageStringUri = cursor.getString(cursor.getColumnIndex(Products.PRODUCT_IMAGE));
 
-            Bitmap imageBitmap = BitmapFactory.decodeByteArray(bitmapProductPicture, 0, bitmapProductPicture.length);
+            imageUri = Uri.parse(imageStringUri);
+            Bitmap imageBitmap = null;
+            try {
+                imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             productNameEdit.setText(productName);
             currentQuantityEdit.setText(String.valueOf(currentQuantity));
             productPriceEdit.setText(String.valueOf(productPrice));
-            productPicture.setImageBitmap(imageBitmap);
+            if (imageBitmap != null) {
+                productPicture.setImageBitmap(imageBitmap);
+            } else {
+                productPicture.setImageResource(R.drawable.nopic);
+            }
 
 
         }
@@ -298,7 +333,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     public class DialogPicture {
 
+        Context context;
+
         DialogPicture(Context context) {
+            this.context = context;
             dialog = new AlertDialog.Builder(context)
                     .setView(R.layout.dialog_picture)
                     .create();
@@ -320,7 +358,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 startActivityForResult(takePictureIntent, REQUEST_CAMERA);
             }
         }
-
     }
 
 
