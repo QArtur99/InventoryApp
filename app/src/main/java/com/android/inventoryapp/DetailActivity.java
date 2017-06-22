@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -58,9 +59,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     String mCurrentPhotoPath;
     private AlertDialog dialog;
     private Uri currentProductUri;
-    private boolean productHasChanged = false;
     private int currentQuantity;
-    private byte[] bitmapProductPicture;
     private String productName;
     private Uri imageUri;
 
@@ -87,12 +86,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     }
 
-    @OnTouch({R.id.productName, R.id.currentQuantity, R.id.productPrice, R.id.soldQuantity, R.id.receivedQuantity})
-    public boolean onTouchListener() {
-        productHasChanged = true;
-        return false;
-    }
-
     @OnClick(R.id.orderMore)
     public void orderMore() {
         Intent intent = new Intent(Intent.ACTION_SENDTO);
@@ -114,9 +107,14 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case REQUEST_CAMERA:
-                    Bundle extras = data.getExtras();
-                    imageBitmap = (Bitmap) extras.get("data");
+                    try {
+                        imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     imageUri = saveTakenPic(imageBitmap);
+                    File file = new File (mCurrentPhotoPath);
+                    file.delete();
                     break;
                 case REQUEST_GALLERY:
                     imageUri = data.getData();
@@ -355,10 +353,34 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         public void takePicture() {
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+                File photoFile = null;
+                try {
+                    photoFile = createImageFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (photoFile != null) {
+                    imageUri = FileProvider.getUriForFile(context,
+                            "com.android.inventoryapp.fileprovider",
+                            photoFile);
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+                }
             }
         }
+
+        private File createImageFile() throws IOException {
+            String imageFileName = "temp";
+            File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            File image = File.createTempFile(
+                    imageFileName,  /* prefix */
+                    ".jpg",         /* suffix */
+                    storageDir      /* directory */
+            );
+
+            mCurrentPhotoPath = image.getAbsolutePath();
+            return image;
+        }
     }
-
-
 }
