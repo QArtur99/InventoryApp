@@ -173,6 +173,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         String currentQuantityString = currentQuantityEdit.getText().toString().trim();
         String productPriceString = productPriceEdit.getText().toString().trim();
 
+        if(imageUri == null){
+            Toast.makeText(this, getString(R.string.detail_new_product_requirement), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (TextUtils.isEmpty(productNameString)
                 || TextUtils.isEmpty(currentQuantityString)
                 || TextUtils.isEmpty(productPriceString)
